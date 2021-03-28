@@ -8,24 +8,24 @@ This package was created and executes in ROS MELODIC version and Ubuntu LTS 18.0
 
 
 
-== XBOX CONTROLLER AXIS AND BUTTONS ==
+= XBOX CONTROLLER AXIS AND BUTTONS =
 --------------------------------------
-=                AXIS                =
+=                AXIS                
 --------------------------------------
-= [0-1] - Left stick
-= [2]   - Left Shot - LT
-= [3-4] - Right stick
-= [5]   - Right Shot - RT
-= [6-7] - Directional Pad
+- [0-1] - Left stick
+- [2]   - Left Shot - LT
+- [3-4] - Right stick
+- [5]   - Right Shot - RT
+- [6-7] - Directional Pad
 --------------------------------------
-=              BUTTONS               =
+=              BUTTONS               
 --------------------------------------
-= 0 : A
-= 1 : B
-= 2 : X
-= 3 : Y
-= 4 : LB
-= 5 : RB
-= 6 : Back Button
-= 7 : Start Button
+- 0 : A
+- 1 : B
+- 2 : X
+- 3 : Y
+- 4 : LB
+- 5 : RB
+- 6 : Back Button
+- 7 : Start Button
 --------------------------------------
