@@ -1,0 +1,14 @@
+<!-- This will start mobile_dev node. -->
+<launch>
+    <rosparam command="load" file="$(find mobile_dev)/config/mobileParameters.yaml" ns="mobile" />
+    
+
+    <!-- This will start joy node-->
+    <node name="joy_node" pkg="joy" type="joy_node" />
+
+    <!-- This will start mobile_dev node-->
+    <node name="mobile_dev" pkg="mobile_dev" type="mobile_dev_node" 
+    args="/mobile/cmd_vel:=/sim_p3at/cmd_vel  /mobile/odom:=/sim_p3at/odom /mobile/joy:=/joy
+    /mobile/transf_position:=/sim_p3at/odom" 
+    output="screen"/>
+</launch>
