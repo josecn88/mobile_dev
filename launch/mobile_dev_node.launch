@@ -1,8 +1,12 @@
 <!-- This will start mobile_dev node. -->
 <launch>
+    <!-- This will start GAZEBO PIONEER 3AT SIMULATION 
+    <include file="/home/neto/pioneer_ws/src/amr-ros-config/gazebo/example-pioneer3at-terrainworld.launch" />
+    -->
+
+    <!-- This will load mobile Parameters to rosparam-->
     <rosparam command="load" file="$(find mobile_dev)/config/mobileParameters.yaml" ns="mobile" />
     
-
     <!-- This will start joy node-->
     <node name="joy_node" pkg="joy" type="joy_node" />
 

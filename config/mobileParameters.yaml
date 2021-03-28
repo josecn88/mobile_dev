@@ -120,7 +120,7 @@ Kd: [-1.50, -1.50, -2.00, 0]
 # "wayPoint"        = set point without acc and vel desired
 # "ident"           = Identification Flight = circleXY (30s) + sinus Z(30s) + sinus Yaw (remaining time)
 
-trajectory: "circleXY"
+trajectory: "eightShape"
 velMed: 0.2
 
 amplitude: 0.4
