@@ -13,6 +13,6 @@
     <!-- This will start mobile_dev node-->
     <node name="mobile_dev" pkg="mobile_dev" type="mobile_dev_node" 
     args="/mobile/cmd_vel:=/sim_p3at/cmd_vel  /mobile/odom:=/sim_p3at/odom /mobile/joy:=/joy
-    /mobile/transf_position:=/sim_p3at/odom" 
+    /mobile/odom:=/sim_p3at/odom" 
     output="screen"/>
 </launch>

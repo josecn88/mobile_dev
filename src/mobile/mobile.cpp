@@ -10,7 +10,7 @@
  * Description: Every function that belongs to the DRONE class.
  *
  * Modified on: 03/27/2021
- *          by: josen
+ *          by: josecn
  * Description: Updade functions to use in mobile robots.
  * 
  */

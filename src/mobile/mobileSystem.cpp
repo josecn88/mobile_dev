@@ -4,7 +4,7 @@
  *  Created on: 16/06/2017
  *      Author: rsinoue
  *      Modified: João Benevides - 07/Sep/2017
- *      Updated: josen - 03/27/2021
+ *      Updated: josecn - 03/27/2021
  */
 
 
@@ -488,10 +488,12 @@ namespace MOBILE {
 
       if (joy->buttons[14]) {
 		mobile.setIsOdomStarted(false);
+		cout << "Joystick Button 14 pressed" << endl;
       } 
 
 	  if(joy->buttons[6]){
 	    flagEnable = true;
+		cout << "Joystick Button 6 pressed" << endl;
 	  }
 	  else{
 	  	flagEnable = false;
