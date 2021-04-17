@@ -3,11 +3,12 @@
     <!-- This will load mobile Parameters to rosparam
     <rosparam command="load" file="$(find mobile_dev)/config/mobileParameters.yaml" ns="mobile" />
     -->
-    <!-- This will start joy node-->
+    <!-- This will start joy node
     <node name="joy_node" pkg="joy" type="joy_node" />
-
-    <!-- This will start mobile_joy node-->
+    -->
+    <!-- This will start mobile_joy node
     <node name="joy2Mobile" pkg="mobile_dev" type="mobile_joy.py" output="screen"/>
+    -->
 
     <!-- This will start mobile_joy node-->
     <node name="trajectoryNode" pkg="mobile_dev" type="trajectory.py" output="screen"/>
