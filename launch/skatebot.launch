@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Launch SkateBot -->
+    <node name="linx_motion" pkg="mobile_dev" type="linx_motiom.py" output="screen">
+    <param name="device" value="'/dev/ttyUSB0'"/>
+    <param name="baud" value="57600"/>
+    </node>
+    <!-- Launch GPS -->
+    <!--node name="skate_GPS" pkg="skate_bot" type="gpsdConfigMTK.sh" output="screen">
+    </node>
+    <include file="$(find skate_bot)/launch/imu_myahrs.launch"/-->
+    <!-- Launch TeleopKeyboard 
+    <node name="teleop_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen">
+    <param name="speed" value="0.2" />
+    </node> -->
+    <!-- Launch USB Cam 
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node">
+    </node> -->
+    <!-- Launch Bag -->
+    <!--node name="skate_bag" pkg="rosbag" type="record" args="-a -o skateBag">
+    </--> 
+</launch>

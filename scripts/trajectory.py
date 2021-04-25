@@ -29,7 +29,7 @@ class Mobile:
     xi  = 0 # initial and final position
     yi  = 0
     psi = 0
-    xf  = 3
+    xf  = 0
     yf  = 0
     ax = 0
     ay = 0 
@@ -43,7 +43,9 @@ class Mobile:
     dxRef = np.array([0,0])
     d2xRef = np.array([0,0])
 
-    stateActual = np.array([0.0,0.0,0.0])
+    # stores actual state got from odometry 
+    # [pose.x, pose.y, yaw_angle, linear.x, linear.y, angular.z]
+    stateActual = np.array([0.0,0.0,0.0,0.0,0.0])
 
     #messages parameters
     odomMsg = Odometry()
@@ -52,8 +54,14 @@ class Mobile:
     poseMsg = Pose()
 
     # ROS variables
-    pub = rospy.Publisher('/sim_p3at/cmd_vel', Twist, queue_size=100)
+    # pub = rospy.Publisher('/sim_p3at/cmd_vel', Twist, queue_size=100)
+    pub = rospy.Publisher('/lynxMotion/cmd_vel', Twist, queue_size=100)
+
     #now = rospy.Time.now()
+
+    #CSV files
+    desiredTrajFile = 0
+    referenceTrajFile = 0
 
     def __init__(self):
         self.x1_cir = 0.008
@@ -67,7 +75,8 @@ class Mobile:
         #self.traj_gen()
         rospy.init_node('trajectoryNode')
 
-        rospy.Subscriber('/sim_p3at/odom', Odometry, callback=self.odom_callback , callback_args='/sim_p3at/odom')
+        #rospy.Subscriber('/sim_p3at/odom', Odometry, callback=self.odom_callback , callback_args='/sim_p3at/odom')
+        rospy.Subscriber('/lynxMotion/odom', Odometry, callback=self.odom_callback , callback_args='/lynxMotion/odom')
         rospy.Subscriber('/target/pose', Odometry, callback=self.pose_callback , callback_args='/target/pose')
 
     def getFrequency(self):
@@ -75,14 +84,17 @@ class Mobile:
 
     def setOdomMsg(self, msg):
         self.odomMsg = msg
-
+        position_list = self.odomMsg.pose.pose.position
         orientation_q = self.odomMsg.pose.pose.orientation
+        linear_vel = self.odomMsg.twist.twist.linear
+        angular_vel = self.odomMsg.twist.twist.angular
         orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
         (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(orientation_list)
-        self.stateActual = [self.odomMsg.pose.pose.position.x, self.odomMsg.pose.pose.position.y, yaw]
-
-        rospy.loginfo("X, Y, Yaw : %s", self.stateActual)
-
+        self.stateActual = [position_list.x, position_list.y, yaw,linear_vel.x, linear_vel.y,angular_vel.z]
+        
+        #rospy.loginfo("X, Y, Yaw, Linear Velocities[x,y], Angular Velocities[z] : %s", self.stateActual)
+        data = str(self.t)+','+str(position_list.x)+','+str(position_list.y)+','+str(yaw)+','+str(linear_vel.x)+','+str(linear_vel.y)+','+str(angular_vel.z)+'\n'
+        self.desiredTrajFile.write(data)
     
     def setJoyMsg(self, msg):
         self.joyMsg = msg
@@ -113,66 +125,66 @@ class Mobile:
 
 
     #def traj_gen(vr, traj_origin, traj_final):
-    def traj_gen(self):
-        # defined by a fifth degree polynomial function
-        # q = a0 + a1*(t-t0) + a2*(t-t0)^2 + a3*(t-t0)^3 + a4*(t-t0)^4 +a5*(t-t0)^5
-        # from initial and final conditions (x,y,t) its possible to get reference trajectory 
-        # and your derivates in each timestamp t
+    # def traj_gen(self):
+    #     # defined by a fifth degree polynomial function
+    #     # q = a0 + a1*(t-t0) + a2*(t-t0)^2 + a3*(t-t0)^3 + a4*(t-t0)^4 +a5*(t-t0)^5
+    #     # from initial and final conditions (x,y,t) its possible to get reference trajectory 
+    #     # and your derivates in each timestamp t
         
-        # INITIAL CONDITIONS
-        to = self.ti
-        xo = self.xi
-        dxo = 0
-        d2xo = 0
-        yo = self.yi
-        dyo = 0
-        d2yo = 0
+    #     # INITIAL CONDITIONS
+    #     to = self.ti
+    #     xo = self.xi
+    #     dxo = 0
+    #     d2xo = 0
+    #     yo = self.yi
+    #     dyo = 0
+    #     d2yo = 0
 
-        # FINAL CONDITION
-        tf = self.tf
-        xf = self.xf
-        dxf = 0
-        d2xf = 0
-        yf = self.yf
-        dyf = 0
-        d2yf = 0
+    #     # FINAL CONDITION
+    #     tf = self.tf
+    #     xf = self.xf
+    #     dxf = 0
+    #     d2xf = 0
+    #     yf = self.yf
+    #     dyf = 0
+    #     d2yf = 0
 
-        vr = self.vr
+    #     vr = self.vr
 
-        if vr==0:
-            return -1
+    #     if vr==0:
+    #         return -1
         
-        if (xf-xo) == 0 and (yf-yo):
-            return -1
+    #     if (xf-xo) == 0 and (yf-yo):
+    #         return -1
 
-        delta_d = math.sqrt((xf-xo)**2 + (yf-yo)**2)
-        delta_t = delta_d/vr # delta_t = (tf - to)
-        tf = delta_t + to
+    #     delta_d = math.sqrt((xf-xo)**2 + (yf-yo)**2)
+    #     delta_t = delta_d/vr # delta_t = (tf - to)
+    #     tf = delta_t + to
 
-        ax = self.par_pol(to,tf,xo,dxo,d2xo,xf,dxf,d2xf)
-        ay = self.par_pol(to,tf,yo,dyo,d2yo,yf,dyf,d2yf)
+    #     ax = self.par_pol(to,tf,xo,dxo,d2xo,xf,dxf,d2xf)
+    #     ay = self.par_pol(to,tf,yo,dyo,d2yo,yf,dyf,d2yf)
         
-        #after clculation update final time with
-        self.tf = tf
+    #     #after clculation update final time with
+    #     self.tf = tf
 
-        refX =  self.traj_pol(ax) #[qx, dqx, ddqx, dddqx]
-        refY =  self.traj_pol(ay) #[qy, dqy, ddqy, dddqy]
+    #     refX =  self.traj_pol(ax) #[qx, dqx, ddqx, dddqx]
+    #     refY =  self.traj_pol(ay) #[qy, dqy, ddqy, dddqy]
         
-        #psi = atan2 Refy[1]/refX[1]
-        self.psi = math.atan2(refY[1],refX[1])        
-        self.xRef = [refX[0],refY[0],self.psi]
+    #     #psi = atan2 Refy[1]/refX[1]
+    #     self.psi = math.atan2(refY[1],refX[1])        
+    #     self.xRef = [refX[0],refY[0],self.psi]
         
-        #dxREF - cmd_ref
-        #w_ref= atan2 Refy[2]/refX[2]
-        refW = (1/(((refY[1]/refX[1])**2)+1)) + (refY[2]/refX[2])
-        refV = math.sqrt(refX[1]**2 + refY[1]**2)
-        self.dxRef = [refV,refW]
+    #     #dxREF - cmd_ref
+    #     #w_ref= atan2 Refy[2]/refX[2]
+    #     refW = (1/(((refY[1]/refX[1])**2)+1)) + (refY[2]/refX[2])
+    #     refV = math.sqrt(refX[1]**2 + refY[1]**2)
+    #     self.dxRef = [refV,refW]
         
-        #d2xREF
-        #dwref = atan2 Refy[2]/refX[2] ddd
-        dwref = (((refY[1]/refX[1])*(-2.0) * (refY[2]**2/refX[2]**2))/(1+((refY[1]/refX[1])**2)))+ ((refY[3]/refX[3])* (1+(1+(refY[1]/refX[1])**2)))
-        dvref = math.sqrt(refX[2]**2 + refY[2]**2)
-        self.d2xRef = [dvref,dwref]
+    #     #d2xREF
+    #     #dwref = atan2 Refy[2]/refX[2] ddd
+    #     dwref = (((refY[1]/refX[1])*(-2.0) * (refY[2]**2/refX[2]**2))/(1+((refY[1]/refX[1])**2)))+ ((refY[3]/refX[3])* (1+(1+(refY[1]/refX[1])**2)))
+    #     dvref = math.sqrt(refX[2]**2 + refY[2]**2)
+    #     self.d2xRef = [dvref,dwref]
 
     def normalize_angle(self,ang, low):
         return ang - 2*math.pi*math.floor((ang-low)/(2*math.pi))
@@ -180,7 +192,7 @@ class Mobile:
     def traj_desired(self):
         # used to generate desired velocities in order to keep robot on reference trajectory
         
-        T = self.T
+        #T = self.T
        
         x1_cir = self.x1_cir
         Kx = self.Kx
@@ -194,11 +206,8 @@ class Mobile:
 
         # vRef (vr, dpsi_r)
         vr = self.dxRef[0]
-        #vr = 1
-        #vr = self.vr
-        #####################################################################
         dpsir = self.dxRef[1]
-        #dpsir = 0
+     
 
         # dvRef (dv_r, d2psi_r)
         dvr = self.d2xRef[0]
@@ -225,58 +234,22 @@ class Mobile:
         w_d = dpsir + Ky*vr*ye + Kpsi*vr*math.sin(psie)
 
         #rospy.loginfo("vd,omegad: %s",[v_d,w_d])
-############################
-        #dxe = ye*w_d - v_d + vr*math.cos(psie)
-        #dye = -1.0 * (xe*w_d + vr*math.sin(psie))
-        #dpsie = dpsir - w_d
-
-        #dv_d = dvr*math.cos(psie) - vr*math.sin(psie) * dpsie +Kx*dxe
-        #dw_d = d2psir + Ky* (dvr*ye + vr*dye) + Kpsi * (dvr*math.sin(psie) + vr*math.cos(psie) * dpsie)
-
-        #knematic model
-
-        #S = np.array([
-        #    [math.cos(psi), x1_cir*math.sin(psi)],
-        #    [math.sin(psi), x1_cir*math.cos(psi) *(-1.0)],
-        #    [0, 1]
-        #])
-
-        #dq_d = S.dot(np.array([v_d, w_d]))
-
-        #dx = dq_d[0]
-        #y = dq_d[1]
-        #dpsi = dq_d[2]
-
-        #X_desired = [
-            #dx*T + self.stateActual[0],
-            #dy*T + self.stateActual[1],
-            #dpsi*T + self.stateActual[2]
-        #]
-
         V_desired = [
             v_d, w_d
         ]
-
-        #dV_desired = [
-        #    dv_d, dw_d
-        #]
-
-        #result = [X_desired, V_desired, dV_desired]
-
-        # Setting Twist Message in order to send to CMD_VEL TOPIC
-        self.cmd_vel.linear.x = V_desired[0]
+        # Setting Twist Message in order to send to CMD_VEL
+        self.cmd_vel.linear.x = v_d
         self.cmd_vel.angular.z = w_d
         #rospy.loginfo(V_desired)
 
         #publishing Velocities
         self.pub.publish(self.cmd_vel)
-        #rospy.loginfo(result[1])
 
     def odom_callback(self, data, topic):
         self.setOdomMsg(data)
 
 
-    # get Pose mesage to update x,y point
+    # get Pose mesage to update x,y reference point and reference velocity vr
     def pose_callback(self, data, topic):
         self.newTarget = 1
         self.poseMsg = data
@@ -319,13 +292,13 @@ class Mobile:
         self.t = self.t - self.ti
         #rospy.loginfo( "t - ti : %s", t )
         if self.newTarget == 1 :
-             # INITIAL CONDITIONS
+            # INITIAL CONDITIONS
             self.to = self.t
             xo = self.stateActual[0]
-            dxo = 0 #pegar do actual
+            dxo = self.stateActual[3]
             d2xo = 0
             yo = self.stateActual[1]
-            dyo = 0
+            dyo = self.stateActual[4]
             d2yo = 0
 
             # FINAL CONDITION
@@ -368,17 +341,19 @@ class Mobile:
             #dxREF - cmd_ref
             #w_ref= atan2 Refy[2]/refX[2]
             #refW = (1/(((refY[1]/refX[1])**2)+1)) + (refY[2]/refX[2])
+            #df = -(y)/(y^2 + x^2)
+            #refW = ()
             refW = 0
             refV = math.sqrt(refX[1]**2 + refY[1]**2)
             self.dxRef = [refV,refW]
             rospy.loginfo(self.dxRef)
 
             #d2xREF
-            #dwref = atan2 Refy[2]/refX[2] ddd
             #dwref = (((refY[1]/refX[1])*(-2.0) * (refY[2]**2/refX[2]**2))/(1+((refY[1]/refX[1])**2)))+ ((refY[3]/refX[3])* (1+(1+(refY[1]/refX[1])**2)))
             #dvref = math.sqrt(refX[2]**2 + refY[2]**2)
             self.d2xRef = [0,0]
-
+            data = str(self.t)+','+str(self.xRef[0]) +','+ str(self.xRef[1])+','+str(self.xRef[2])+','+str(self.dxRef[0])+','+str(self.dxRef[1])+','+str(self.d2xRef[0])+','+str(self.d2xRef[1])+'\n'
+            self.referenceTrajFile.write(data)
             self.traj_desired()
             
             if self.t > self.tf:
@@ -397,13 +372,18 @@ class Mobile:
     def run(self):
         #setting initial time
         self.ti = self.setTime()
-        # 100hz rate
         rate=rospy.Rate(100)
-
+        trajReference = "refTraj"+str(int(self.ti))+".csv"
+        trajDesired   = "desTraj"+str(int(self.ti))+".csv"
+        self.referenceTrajFile = open(trajReference,"w")
+        self.desiredTrajFile = open(trajDesired, "w")
         while not rospy.is_shutdown():
             self.control()
             rate.sleep()
         rospy.spin()
+
+        self.desiredTrajFile.close()
+        self.referenceTrajFile.close()
 
 if __name__ ==  '__main__':
 
