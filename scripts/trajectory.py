@@ -54,9 +54,10 @@ class Mobile:
     poseMsg = Pose()
 
     # ROS variables
-    # pub = rospy.Publisher('/sim_p3at/cmd_vel', Twist, queue_size=100)
+    #### Mudar aqui para Publisher Simulador ou Robo Real ################
+    #pub = rospy.Publisher('/sim_p3at/cmd_vel', Twist, queue_size=100)
     pub = rospy.Publisher('/lynxMotion/cmd_vel', Twist, queue_size=100)
-
+    ###################################################################
     #now = rospy.Time.now()
 
     #CSV files
@@ -75,6 +76,7 @@ class Mobile:
         #self.traj_gen()
         rospy.init_node('trajectoryNode')
 
+        #### Mudar aqui para Subscriber Simulador e Robo Real #####
         #rospy.Subscriber('/sim_p3at/odom', Odometry, callback=self.odom_callback , callback_args='/sim_p3at/odom')
         rospy.Subscriber('/lynxMotion/odom', Odometry, callback=self.odom_callback , callback_args='/lynxMotion/odom')
         rospy.Subscriber('/target/pose', Odometry, callback=self.pose_callback , callback_args='/target/pose')
@@ -93,8 +95,8 @@ class Mobile:
         self.stateActual = [position_list.x, position_list.y, yaw,linear_vel.x, linear_vel.y,angular_vel.z]
         
         #rospy.loginfo("X, Y, Yaw, Linear Velocities[x,y], Angular Velocities[z] : %s", self.stateActual)
-        data = str(self.t)+','+str(position_list.x)+','+str(position_list.y)+','+str(yaw)+','+str(linear_vel.x)+','+str(linear_vel.y)+','+str(angular_vel.z)+'\n'
-        self.desiredTrajFile.write(data)
+        #data = str(self.t)+','+str(position_list.x)+','+str(position_list.y)+','+str(yaw)+','+str(linear_vel.x)+','+str(linear_vel.y)+','+str(angular_vel.z)+'\n'
+        #self.desiredTrajFile.write(data)
     
     def setJoyMsg(self, msg):
         self.joyMsg = msg
@@ -122,69 +124,6 @@ class Mobile:
         Ai = np.linalg.inv(A)
         a = Ai.dot(q_v)
         return a
-
-
-    #def traj_gen(vr, traj_origin, traj_final):
-    # def traj_gen(self):
-    #     # defined by a fifth degree polynomial function
-    #     # q = a0 + a1*(t-t0) + a2*(t-t0)^2 + a3*(t-t0)^3 + a4*(t-t0)^4 +a5*(t-t0)^5
-    #     # from initial and final conditions (x,y,t) its possible to get reference trajectory 
-    #     # and your derivates in each timestamp t
-        
-    #     # INITIAL CONDITIONS
-    #     to = self.ti
-    #     xo = self.xi
-    #     dxo = 0
-    #     d2xo = 0
-    #     yo = self.yi
-    #     dyo = 0
-    #     d2yo = 0
-
-    #     # FINAL CONDITION
-    #     tf = self.tf
-    #     xf = self.xf
-    #     dxf = 0
-    #     d2xf = 0
-    #     yf = self.yf
-    #     dyf = 0
-    #     d2yf = 0
-
-    #     vr = self.vr
-
-    #     if vr==0:
-    #         return -1
-        
-    #     if (xf-xo) == 0 and (yf-yo):
-    #         return -1
-
-    #     delta_d = math.sqrt((xf-xo)**2 + (yf-yo)**2)
-    #     delta_t = delta_d/vr # delta_t = (tf - to)
-    #     tf = delta_t + to
-
-    #     ax = self.par_pol(to,tf,xo,dxo,d2xo,xf,dxf,d2xf)
-    #     ay = self.par_pol(to,tf,yo,dyo,d2yo,yf,dyf,d2yf)
-        
-    #     #after clculation update final time with
-    #     self.tf = tf
-
-    #     refX =  self.traj_pol(ax) #[qx, dqx, ddqx, dddqx]
-    #     refY =  self.traj_pol(ay) #[qy, dqy, ddqy, dddqy]
-        
-    #     #psi = atan2 Refy[1]/refX[1]
-    #     self.psi = math.atan2(refY[1],refX[1])        
-    #     self.xRef = [refX[0],refY[0],self.psi]
-        
-    #     #dxREF - cmd_ref
-    #     #w_ref= atan2 Refy[2]/refX[2]
-    #     refW = (1/(((refY[1]/refX[1])**2)+1)) + (refY[2]/refX[2])
-    #     refV = math.sqrt(refX[1]**2 + refY[1]**2)
-    #     self.dxRef = [refV,refW]
-        
-    #     #d2xREF
-    #     #dwref = atan2 Refy[2]/refX[2] ddd
-    #     dwref = (((refY[1]/refX[1])*(-2.0) * (refY[2]**2/refX[2]**2))/(1+((refY[1]/refX[1])**2)))+ ((refY[3]/refX[3])* (1+(1+(refY[1]/refX[1])**2)))
-    #     dvref = math.sqrt(refX[2]**2 + refY[2]**2)
-    #     self.d2xRef = [dvref,dwref]
 
     def normalize_angle(self,ang, low):
         return ang - 2*math.pi*math.floor((ang-low)/(2*math.pi))
@@ -251,12 +190,13 @@ class Mobile:
 
     # get Pose mesage to update x,y reference point and reference velocity vr
     def pose_callback(self, data, topic):
-        self.newTarget = 1
-        self.poseMsg = data
-        self.xf = self.poseMsg.pose.pose.position.x
-        self.yf = self.poseMsg.pose.pose.position.y
-        self.vr = self.poseMsg.twist.twist.linear.x
-        #rospy.loginfo(self.poseMsg)
+        if self.newTarget == 0 and self.newTraj == 0:
+            self.newTarget = 1
+            self.poseMsg = data
+            self.xf = self.poseMsg.pose.pose.position.x
+            self.yf = self.poseMsg.pose.pose.position.y
+            self.vr = self.poseMsg.twist.twist.linear.x
+            #rospy.loginfo(self.poseMsg)
 
 
     def setTime(self):
@@ -352,8 +292,8 @@ class Mobile:
             #dwref = (((refY[1]/refX[1])*(-2.0) * (refY[2]**2/refX[2]**2))/(1+((refY[1]/refX[1])**2)))+ ((refY[3]/refX[3])* (1+(1+(refY[1]/refX[1])**2)))
             #dvref = math.sqrt(refX[2]**2 + refY[2]**2)
             self.d2xRef = [0,0]
-            data = str(self.t)+','+str(self.xRef[0]) +','+ str(self.xRef[1])+','+str(self.xRef[2])+','+str(self.dxRef[0])+','+str(self.dxRef[1])+','+str(self.d2xRef[0])+','+str(self.d2xRef[1])+'\n'
-            self.referenceTrajFile.write(data)
+            #data = str(self.t)+','+str(self.xRef[0]) +','+ str(self.xRef[1])+','+str(self.xRef[2])+','+str(self.dxRef[0])+','+str(self.dxRef[1])+','+str(self.d2xRef[0])+','+str(self.d2xRef[1])+'\n'
+            #self.referenceTrajFile.write(data)
             self.traj_desired()
             
             if self.t > self.tf:
@@ -373,17 +313,17 @@ class Mobile:
         #setting initial time
         self.ti = self.setTime()
         rate=rospy.Rate(100)
-        trajReference = "refTraj"+str(int(self.ti))+".csv"
-        trajDesired   = "desTraj"+str(int(self.ti))+".csv"
-        self.referenceTrajFile = open(trajReference,"w")
-        self.desiredTrajFile = open(trajDesired, "w")
+        #trajReference = "refTraj"+str(int(self.ti))+".csv"
+        #trajDesired   = "desTraj"+str(int(self.ti))+".csv"
+        #self.referenceTrajFile = open(trajReference,"w")
+        #self.desiredTrajFile = open(trajDesired, "w")
         while not rospy.is_shutdown():
             self.control()
             rate.sleep()
         rospy.spin()
 
-        self.desiredTrajFile.close()
-        self.referenceTrajFile.close()
+        #self.desiredTrajFile.close()
+        #self.referenceTrajFile.close()
 
 if __name__ ==  '__main__':
 

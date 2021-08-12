@@ -10,7 +10,8 @@
     <node name="joy2Mobile" pkg="mobile_dev" type="mobile_joy.py" output="screen"/>
     -->
     <!-- Launch LinxMotion Comunication over Arduino -->
-    <node name="linx_motion" pkg="mobile_dev" type="linx_motion.py" output="screen">
+    
+    <node name="lynxMotion" pkg="mobile_dev" type="lynxMotion.py" output="screen">
     <param name="device" value="'/dev/ttyUSB0'"/>
     <param name="baud" value="57600"/>
     </node>
